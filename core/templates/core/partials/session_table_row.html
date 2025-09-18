@@ -1,0 +1,46 @@
+<tr id="row-{{ session.id }}">
+    <td>{{ session.date|date:"d/m/Y" }}</td>
+    <td>{{ session.time|time:"H:i" }}</td>
+    <td>{{ session.classroom.name }}</td>
+
+    <td>
+        <div>{{ session.teacher.get_full_name }}</div>
+        <div>
+            <select class="form-select form-select-sm substitute-dropdown" data-session-id="{{ session.id }}">
+                <option value="">Sem substituto</option>
+                {% for t in teachers %}
+                    <option value="{{ t.id }}" {% if session.substitute_teacher and session.substitute_teacher.id == t.id %}selected{% endif %}>
+                        {{ t.get_full_name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+    </td>
+
+    <td>
+        <select class="form-select form-select-sm status-dropdown" data-session-id="{{ session.id }}">
+            <option value="SCHEDULED" {% if session.status == 'SCHEDULED' %}selected{% endif %}>Agendada</option>
+            <option value="COMPLETED" {% if session.status == 'COMPLETED' %}selected{% endif %}>Concluída</option>
+            <option value="CANCELLED" {% if session.status == 'CANCELLED' %}selected{% endif %}>Cancelada</option>
+        </select>
+    </td>
+
+    <td class="text-center">
+        <button class="btn btn-sm btn-primary open-modal"
+                data-url="{% url 'edit_session' session.id %}"
+                data-row-id="{{ session.id }}">
+            <i class="bi bi-pencil"></i> Editar
+        </button>
+
+        <button class="btn btn-sm btn-danger delete-btn"
+                data-url="{% url 'delete_session' session.id %}"
+                data-row-id="{{ session.id }}">
+            <i class="bi bi-trash"></i> Excluir
+        </button>
+
+        <button class="btn btn-sm btn-warning duplicate-btn"
+                data-session-id="{{ session.id }}">
+            <i class="bi bi-files"></i> Duplicar
+        </button>
+    </td>
+</tr>

@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% block content %}
+
+<h2>Agenda semanal de {{ teacher.get_full_name|default:teacher.username }}</h2>
+
+<div class="mb-3">
+    <a href="{% url 'teachers_manage' %}" class="btn btn-secondary btn-sm">← Voltar</a>
+</div>
+
+<div class="d-flex justify-content-between mb-3">
+    <div>
+        Semana de: {{ current_week|date:"d/m/Y" }}
+    </div>
+    <div>
+        <a href="?week={{ current_week|add_days:"-7"|date:"Y-m-d" }}" class="btn btn-outline-secondary btn-sm">&laquo; Semana anterior</a>
+        <a href="?week={{ current_week|add_days:"7"|date:"Y-m-d" }}" class="btn btn-outline-secondary btn-sm">Próxima semana &raquo;</a>
+    </div>
+</div>
+
+<table class="table table-bordered table-striped table-hover shadow-sm">
+    <thead class="table-light text-center">
+        <tr>
+            <th>Dia</th>
+            <th>Horário</th>
+            <th>Turma</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for day in week_days %}
+            {% with sessions=schedule|get_item:day %}
+                {% if sessions %}
+                    {% for session in sessions %}
+                        <tr>
+                            <td>{{ session.date|date:"d/m/Y" }}</td>
+                            <td>{{ session.time|time:"H:i" }}</td>
+                            <td>{{ session.classroom.name }}</td>
+                            <td>{{ session.get_status_display }}</td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td>{{ day|date:"d/m/Y" }}</td>
+                        <td colspan="3" class="text-center text-muted">Sem aulas</td>
+                    </tr>
+                {% endif %}
+            {% endwith %}
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

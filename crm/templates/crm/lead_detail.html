@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Detalhes do Lead</h2>
+
+    <div class="card mb-3">
+        <div class="card-header">
+            <strong>{{ lead.codigo }} - {{ lead.name }}</strong>
+        </div>
+        <div class="card-body">
+            <p><strong>Telefone:</strong> {{ lead.telefone }}</p>
+            <p><strong>Celular:</strong> {{ lead.celular }}</p>
+            <p><strong>WhatsApp:</strong>
+                {% if lead.whatsapp %}
+                <i class="bi bi-whatsapp text-success"></i>
+                {% else %}
+                Não
+                {% endif %}
+            </p>
+            <p><strong>Horário:</strong> {{ lead.horario }}</p>
+            <p><strong>Operadora:</strong> {{ lead.operadora }}</p>
+            <p><strong>Forma de Conhecimento:</strong> {{ lead.forma_conhecimento }}</p>
+            <p><strong>Pacote Interessado:</strong> {{ lead.pacote_interessado }}</p>
+            <p><strong>Valor Divulgado:</strong> R$ {{ lead.valor_divulgado }}</p>
+            <p><strong>Email:</strong> {{ lead.email }}</p>
+            <p><strong>Atendente:</strong> {{ lead.atendente }}</p>
+            <p><strong>Vendedor:</strong> {{ lead.vendedor }}</p>
+
+            <button type="button" class="btn btn-secondary edit-lead-btn" data-id="{{ lead.id }}">
+                <i class="bi bi-pencil"></i> Editar
+            </button>
+
+            <button type="button" class="btn btn-danger delete-lead-btn" data-id="{{ lead.id }}">
+                <i class="bi bi-trash"></i> Excluir
+            </button>
+
+            <a href="{% url 'lead_list' %}" class="btn btn-outline-secondary">Voltar</a>
+        </div>
+    </div>
+
+    <h4>Notas</h4>
+    <form method="post" id="noteForm">
+        {% csrf_token %}
+        <div class="mb-3">
+            {{ note_form.note }}
+            {% if note_form.note.errors %}
+            <div class="text-danger small">{{ note_form.note.errors }}</div>
+            {% endif %}
+        </div>
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Adicionar Nota
+        </button>
+    </form>
+
+    <div class="mt-3" id="notesList">
+        {% for note in notes %}
+        <div class="card mb-2">
+            <div class="card-header">
+                {{ note.user }} - {{ note.created_at|date:"d/m/Y H:i" }}
+            </div>
+            <div class="card-body">
+                {{ note.note }}
+            </div>
+        </div>
+        {% empty %}
+        <p>Sem notas registradas.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Modal de Edição do Lead -->
+<div class="modal fade" id="editLeadModal" tabindex="-1" aria-labelledby="editLeadModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editLeadModalLabel">Editar Lead</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body" id="editLeadModalBody">
+        <!-- Formulário AJAX carregado aqui -->
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'crm/js/edit_manager.js' %}"></script>
+<script src="{% static 'crm/js/delete_manager.js' %}"></script>
+{% endblock %}

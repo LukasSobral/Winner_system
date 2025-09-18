@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load custom_filters %} 
+
+{% block content %}
+<h2>Agenda da Semana</h2>
+
+<table class="table table-striped table-hover table-bordered rounded shadow-sm">
+
+    <thead>
+        <tr>
+            {% for day in days %}
+                <th>{{ day|date:"d/m/Y" }} ({{ day|date:"D" }})</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            {% for day in days %}
+                <td>
+                {% for session in sessions_by_date|get_item:day %}
+                    <div class="border p-2 mb-2">
+                        <strong>{{ session.classroom.name }}</strong><br>
+                        {{ session.time|time:"H:i" }}<br>
+                        Status: {{ session.get_status_display }}
+                        <br><a href="{% url 'session_detail' session.id %}">Ver Aula</a>
+                    </div>
+                {% empty %}
+                    <span class="text-muted">Sem aulas</span>
+                {% endfor %}
+                </td>
+            {% endfor %}
+        </tr>
+    </tbody>
+</table>
+
+{% endblock %}

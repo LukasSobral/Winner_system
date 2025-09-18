@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% block content %}
+
+<h2>Escala Mensal de Professores</h2>
+
+<form method="get" class="mb-3 d-flex justify-content-start align-items-center">
+    <label class="me-2">Selecione o mês:</label>
+    <select name="month" class="form-select w-auto me-2">
+        {% for m in 1|to:12 %}
+            <option value="{{ m }}" {% if m == month|add:0 %}selected{% endif %}>
+                {{ m|get_month_name }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <select name="year" class="form-select w-auto me-2">
+        {% for y in 2023|to:2030 %}
+            <option value="{{ y }}" {% if y == year|add:0 %}selected{% endif %}>{{ y }}</option>
+        {% endfor %}
+    </select>
+
+    <button type="submit" class="btn btn-primary">Buscar</button>
+</form>
+
+<table class="table table-bordered table-striped table-hover shadow-sm">
+    <thead class="table-light text-center align-middle">
+        <tr>
+            <th style="width: 200px;">Professor</th>
+            {% for day in days %}
+                <th>{{ day.day }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for teacher, agenda in schedule.items %}
+        <tr>
+            <td><strong>{{ teacher.get_full_name|default:teacher.username }}</strong></td>
+            {% for day in days %}
+                {% with sessions=agenda|get_item:day %}
+                <td class="text-center align-middle {% if sessions %}p-0{% endif %}">
+                    {% if sessions %}
+                        <a href="{% url 'teacher_schedule_detail' teacher.id %}?week={{ day|date:'Y-m-d' }}" 
+                        class="d-block bg-success text-white text-decoration-none py-3" 
+                        style="height: 100%;">
+                            {% for session in sessions %}
+                                <div style="font-size: 0.8rem;">{{ session.classroom.name }}</div>
+                            {% endfor %}
+                        </a>
+                        {% else %}
+                            <span class="text-muted">&ndash;</span>
+                    {% endif %}
+                </td>
+                {% endwith %}
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

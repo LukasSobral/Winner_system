@@ -1,0 +1,18 @@
+<tr id="row-{{ student.id }}">
+    <td>{{ student.full_name }}</td>
+    <td>{{ student.classroom.name }}</td>
+    <td>{{ student.active|yesno:"Sim,Não" }}</td>
+    <td class="text-center">
+        <button class="btn btn-sm btn-primary open-modal" 
+                data-url="{% url 'edit_student_ajax' student.id %}" 
+                data-row-id="{{ student.id }}">
+            <i class="bi bi-pencil"></i> Editar
+        </button>
+
+        <button class="btn btn-sm btn-danger delete-btn" 
+                data-url="{% url 'delete_student' student.id %}" 
+                data-row-id="{{ student.id }}">
+            <i class="bi bi-trash"></i> Excluir
+        </button>
+    </td>
+</tr>

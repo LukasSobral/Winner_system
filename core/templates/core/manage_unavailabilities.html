@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h2>Indisponibilidades de Professores</h2>
+
+<form method="post" class="mb-4">
+    {% csrf_token %}
+    <div class="row g-3">
+        <div class="col-md-3">
+            {{ form.teacher.label_tag }} {{ form.teacher }}
+        </div>
+        <div class="col-md-2">
+            {{ form.start_date.label_tag }} {{ form.start_date }}
+        </div>
+        <div class="col-md-2">
+            {{ form.end_date.label_tag }} {{ form.end_date }}
+        </div>
+        <div class="col-md-3">
+            {{ form.reason.label_tag }} {{ form.reason }}
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+            <button type="submit" class="btn btn-success w-100">Adicionar</button>
+        </div>
+    </div>
+</form>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Professor</th>
+            <th>Período</th>
+            <th>Motivo</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in unavailabilities %}
+        <tr>
+            <td>{{ item.teacher.get_full_name }}</td>
+            <td>{{ item.start_date }} - {{ item.end_date }}</td>
+            <td>{{ item.reason }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

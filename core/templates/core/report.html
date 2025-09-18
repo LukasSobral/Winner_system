@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Relatório de Pontos</h2>
+
+<table class="table table-striped table-hover table-bordered rounded shadow-sm">
+
+    <thead>
+        <tr>
+            <th>Turma</th>
+            <th>Aluno</th>
+            <th>Pontos</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in report_data %}
+        <tr>
+            <td>{{ row.classroom }}</td>
+            <td>{{ row.student }}</td>
+            <td>{{ row.points }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

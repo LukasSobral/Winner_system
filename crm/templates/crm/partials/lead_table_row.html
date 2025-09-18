@@ -1,0 +1,25 @@
+<tr id="lead-row-{{ lead.id }}">
+    <td>{{ lead.codigo }}</td>
+    <td>{{ lead.name }}</td>
+    <td>{{ lead.telefone }}</td>
+    <td>{{ lead.celular }}</td>
+    <td>
+        {% if lead.whatsapp %}
+        <i class="bi bi-whatsapp text-success"></i>
+        {% else %}
+        -
+        {% endif %}
+    </td>
+    <td>{{ lead.atendente }}</td>
+    <td>
+        <a href="{% url 'lead_detail' lead.id %}" class="btn btn-sm btn-info">
+            <i class="bi bi-eye"></i> Detalhes
+        </a>
+        <button class="btn btn-sm btn-secondary edit-lead-btn" data-id="{{ lead.id }}">
+            <i class="bi bi-pencil"></i> Editar
+        </button>
+        <button class="btn btn-sm btn-danger delete-lead-btn" data-id="{{ lead.id }}">
+            <i class="bi bi-trash"></i> Excluir
+        </button>
+    </td>
+</tr>

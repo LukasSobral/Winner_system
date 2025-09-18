@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<h2>Sessões de Aula</h2>
+
+<button class="btn btn-success mb-3 open-modal" 
+        data-url="{% url 'create_session' %}" 
+        data-row-id="">
+    <i class="bi bi-plus-lg"></i> Nova Sessão
+</button>
+
+<form method="get" class="mb-4 row g-2 align-items-end">
+    <div class="col-md-3">
+        <input type="text" name="q" class="form-control" placeholder="Buscar turma ou professor..." value="{{ query }}">
+    </div>
+    <div class="col-md-2">
+        <label>Período (início):</label>
+        <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
+    </div>
+    <div class="col-md-2">
+        <label>Período (fim):</label>
+        <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
+    </div>
+    <div class="col-md-2">
+        <select name="classroom" class="form-select">
+            <option value="">Todas as turmas</option>
+            {% for c in classrooms %}
+                <option value="{{ c.id }}" {% if classroom_filter == c.id|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-2">
+        <select name="teacher" class="form-select">
+            <option value="">Todos os professores</option>
+            {% for t in teachers %}
+                <option value="{{ t.id }}" {% if teacher_filter == t.id|stringformat:"s" %}selected{% endif %}>{{ t.get_full_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-1">
+        <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+    </div>
+</form>
+
+<table class="table table-striped table-hover table-bordered rounded shadow-sm">
+    <thead>
+        <tr>
+            <th>Data</th>
+            <th>Hora</th>
+            <th>Turma</th>
+            <th>Professor / Substituto</th>
+            <th>Status</th>
+            <th class="text-center">Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for session in sessions %}
+            {% include 'core/partials/session_table_row.html' with session=session teachers=teachers %}
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if sessions.has_other_pages %}
+<nav aria-label="Paginação">
+    <ul class="pagination justify-content-center mt-4">
+        {% if sessions.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ sessions.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if classroom_filter %}&classroom={{ classroom_filter }}{% endif %}{% if teacher_filter %}&teacher={{ teacher_filter }}{% endif %}" aria-label="Anterior">
+            <span aria-hidden="true">&laquo;</span>
+            </a>
+        </li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+        {% endif %}
+
+        {% for num in sessions.paginator.page_range %}
+        {% if sessions.number == num %}
+            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+        {% else %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if classroom_filter %}&classroom={{ classroom_filter }}{% endif %}{% if teacher_filter %}&teacher={{ teacher_filter }}{% endif %}">
+                    {{ num }}
+                </a>
+            </li>
+        {% endif %}
+        {% endfor %}
+
+        {% if sessions.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ sessions.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if classroom_filter %}&classroom={{ classroom_filter }}{% endif %}{% if teacher_filter %}&teacher={{ teacher_filter }}{% endif %}" aria-label="Próxima">
+            <span aria-hidden="true">&raquo;</span>
+            </a>
+        </li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% endblock %}

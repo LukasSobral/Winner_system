@@ -1,0 +1,19 @@
+<tr id="row-{{ classroom.id }}">
+    <td>{{ classroom.name }}</td>
+    <td>{{ classroom.schedule }}</td>
+    <td>{{ classroom.book_level }}</td>
+    <td>{{ classroom.teacher }}</td>
+    <td class="text-center">
+        <button class="btn btn-sm btn-primary open-modal" 
+                data-url="{% url 'edit_classroom_ajax' classroom.id %}" 
+                data-row-id="{{ classroom.id }}">
+            <i class="bi bi-pencil"></i> Editar
+        </button>
+
+        <button class="btn btn-sm btn-danger delete-btn" 
+                data-url="{% url 'delete_classroom' classroom.id %}" 
+                data-row-id="{{ classroom.id }}">
+            <i class="bi bi-trash"></i> Excluir
+        </button>
+    </td>
+</tr>

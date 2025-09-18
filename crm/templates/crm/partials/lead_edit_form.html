@@ -1,0 +1,21 @@
+<form id="leadEditForm" action="{% url 'lead_edit_ajax' lead.id %}" method="post">
+    {% csrf_token %}
+    <div class="row">
+        {% for field in form %}
+        <div class="mb-3 col-md-6">
+            <label class="form-label">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+            <div class="text-danger small">{{ field.errors }}</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    <div id="leadEditErrors" class="text-danger mt-2"></div>
+    <div class="modal-footer">
+        <button type="submit" class="btn btn-success">
+            <i class="bi bi-save"></i> Salvar
+        </button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+    </div>
+</form>

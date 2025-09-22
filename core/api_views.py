@@ -5,11 +5,14 @@ from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework import viewsets, permissions,filters
-from core.api_serializers import UserSerializer, UserUpdateSerializer,TeacherSerializer, TeacherCreateSerializer, StudentSerializer,ClassroomSerializer, SessionSerializer,AttendanceSerializer
-from core.models import User, Student, ClassRoom,ClassSession,AttendanceRecord
+from core.api_serializers import UserSerializer, UserUpdateSerializer,TeacherSerializer, TeacherCreateSerializer, StudentSerializer,ClassroomSerializer, SessionSerializer,AttendanceSerializer,TeacherUnavailabilitySerializer
+from core.models import Student, ClassRoom,ClassSession,AttendanceRecord,TeacherUnavailability
+from accounts.models import User
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework import status as drf_status
+
+from accounts.permissions import IsCoordinator, IsTeacherOrCoordinator
 
 @api_view(["GET"])
 def ping(request):
@@ -39,7 +42,9 @@ class MeView(APIView):
 
 class TeacherViewSet(viewsets.ModelViewSet):
     queryset = User.objects.filter(role="TEACHER")
-    permission_classes = [permissions.IsAuthenticated]
+
+    # Apenas coordenadores podem gerenciar professores
+    permission_classes = [permissions.IsAuthenticated, IsCoordinator]
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ["id", "username", "email"]
@@ -52,10 +57,13 @@ class TeacherViewSet(viewsets.ModelViewSet):
             return TeacherCreateSerializer
         return TeacherSerializer
 
+
 class StudentViewSet(viewsets.ModelViewSet):
     queryset = Student.objects.all().select_related("classroom")
     serializer_class = StudentSerializer
-    permission_classes = [permissions.IsAuthenticated]
+
+    # Apenas coordenadores podem gerenciar alunos
+    permission_classes = [permissions.IsAuthenticated, IsCoordinator]
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ["id", "classroom", "active"]
@@ -63,10 +71,13 @@ class StudentViewSet(viewsets.ModelViewSet):
     ordering_fields = ["id", "full_name", "classroom__name"]
     ordering = ["id"]
 
+
 class ClassroomViewSet(viewsets.ModelViewSet):
     queryset = ClassRoom.objects.all()
     serializer_class = ClassroomSerializer
-    permission_classes = [permissions.IsAuthenticated]
+
+    # Apenas coordenadores podem gerenciar turmas
+    permission_classes = [permissions.IsAuthenticated, IsCoordinator]
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ["id", "name", "book_level"]
@@ -87,13 +98,13 @@ class SessionViewSet(viewsets.ModelViewSet):
     ordering = ["date", "time"]
 
 
-    @action(detail=True, methods=["get"], url_path="attendance")
+    @action(detail=True, methods=["get"], url_path="attendance", permission_classes=[permissions.IsAuthenticated, IsTeacherOrCoordinator])
     def list_attendance(self, request, pk=None):
         """Lista os alunos da turma da sessão + status de presença"""
         session = self.get_object()
         students = Student.objects.filter(classroom=session.classroom)
 
-        # Garante que existam registros de presença para cada aluno
+
         for student in students:
             AttendanceRecord.objects.get_or_create(session=session, student=student)
 
@@ -101,11 +112,11 @@ class SessionViewSet(viewsets.ModelViewSet):
         serializer = AttendanceSerializer(attendance, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=["patch"], url_path="attendance")
+    @action(detail=True, methods=["patch"], url_path="attendance", permission_classes=[permissions.IsAuthenticated, IsTeacherOrCoordinator])
     def update_attendance(self, request, pk=None):
         """Atualiza presença dos alunos de uma sessão"""
         session = self.get_object()
-        data = request.data  # deve ser uma lista de objetos
+        data = request.data
 
         if not isinstance(data, list):
             return Response({"error": "Esperada uma lista de presenças."}, status=400)
@@ -126,7 +137,7 @@ class SessionViewSet(viewsets.ModelViewSet):
         return Response(updated, status=200)
     
     # --- NOVO ENDPOINT ---
-    @action(detail=True, methods=["patch"], url_path="status")
+    @action(detail=True, methods=["patch"], url_path="status", permission_classes=[permissions.IsAuthenticated, IsTeacherOrCoordinator])
     def update_status(self, request, pk=None):
         """Atualiza apenas o status da sessão"""
         session = self.get_object()
@@ -145,8 +156,10 @@ class SessionViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=drf_status.HTTP_200_OK)
 
 
+    # -------------------------------
+    # CREATE
+    # -------------------------------
     def create(self, request, *args, **kwargs):
-        """Validação customizada ao criar aula"""
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -155,24 +168,38 @@ class SessionViewSet(viewsets.ModelViewSet):
         teacher = serializer.validated_data.get("teacher")
         classroom = serializer.validated_data.get("classroom")
 
-        # Validação professor ocupado
+        # 🔹 Validação: professor ocupado no mesmo horário
         if teacher and ClassSession.objects.filter(teacher=teacher, date=date, time=time).exists():
             return Response(
                 {"error": f"O professor {teacher.get_full_name()} já possui outra aula neste horário."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Validação turma ocupada
+        # 🔹 Validação: turma ocupada no mesmo horário
         if classroom and ClassSession.objects.filter(classroom=classroom, date=date, time=time).exists():
             return Response(
                 {"error": f"A turma {classroom.name} já possui outra aula neste horário."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # 🔹 Validação: professor indisponível
+        if teacher and TeacherUnavailability.objects.filter(
+            teacher=teacher,
+            start_date__lte=date,
+            end_date__gte=date
+        ).exists():
+            return Response(
+                {"error": f"O professor {teacher.get_full_name()} está indisponível em {date}."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         return super().create(request, *args, **kwargs)
 
+    
+    # -------------------------------
+    # UPDATE
+    # -------------------------------
     def update(self, request, *args, **kwargs):
-        """Mesma validação ao atualizar"""
         partial = kwargs.pop("partial", False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -183,17 +210,41 @@ class SessionViewSet(viewsets.ModelViewSet):
         teacher = serializer.validated_data.get("teacher", instance.teacher)
         classroom = serializer.validated_data.get("classroom", instance.classroom)
 
+        # 🔹 Validação: professor ocupado
         if teacher and ClassSession.objects.exclude(id=instance.id).filter(teacher=teacher, date=date, time=time).exists():
             return Response(
                 {"error": f"O professor {teacher.get_full_name()} já possui outra aula neste horário."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # 🔹 Validação: turma ocupada
         if classroom and ClassSession.objects.exclude(id=instance.id).filter(classroom=classroom, date=date, time=time).exists():
             return Response(
                 {"error": f"A turma {classroom.name} já possui outra aula neste horário."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        # 🔹 Validação: professor indisponível
+        if teacher and TeacherUnavailability.objects.filter(
+            teacher=teacher,
+            start_date__lte=date,
+            end_date__gte=date
+        ).exists():
+            return Response(
+                {"error": f"O professor {teacher.get_full_name()} está indisponível em {date}."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         return super().update(request, *args, **kwargs)
-    
+
+
+class TeacherUnavailabilityViewSet(viewsets.ModelViewSet):
+    queryset = TeacherUnavailability.objects.all().select_related("teacher")
+    serializer_class = TeacherUnavailabilitySerializer
+    permission_classes = [permissions.IsAuthenticated, IsCoordinator]
+
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ["teacher", "start_date", "end_date"]
+    search_fields = ["teacher__first_name", "teacher__last_name", "reason"]
+    ordering_fields = ["start_date", "end_date"]
+    ordering = ["-start_date"]

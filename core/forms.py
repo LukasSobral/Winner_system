@@ -1,9 +1,10 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from .models import ClassSession, TeacherUnavailability
-from .models import ClassRoom, User
+from .models import ClassRoom
 from .models import Student
 from .models import Holiday
+from accounts.models import User
 
 
 class TeacherCreationForm(UserCreationForm):

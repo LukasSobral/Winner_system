@@ -1,6 +1,6 @@
 from rest_framework import serializers
-from core.models import Student,AttendanceRecord,ClassSession,User,ClassRoom
-
+from core.models import Student,AttendanceRecord,ClassSession,ClassRoom,TeacherUnavailability
+from accounts.models import User
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -86,3 +86,10 @@ class AttendanceSerializer(serializers.ModelSerializer):
             "book",
             "repost",
         ]
+
+class TeacherUnavailabilitySerializer(serializers.ModelSerializer):
+    teacher_name = serializers.CharField(source="teacher.get_full_name", read_only=True)
+
+    class Meta:
+        model = TeacherUnavailability
+        fields = ["id", "teacher", "teacher_name", "start_date", "end_date", "reason"]

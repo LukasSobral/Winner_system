@@ -5,8 +5,6 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
-
-# 🔥 imports do drf-spectacular
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularSwaggerView,
@@ -20,14 +18,11 @@ urlpatterns = [
     # Apps principais
     path("", include("core.urls")),
     path("crm/", include("crm.urls")),
+    path("api/accounts/", include("accounts.urls")),  # 🔥 centralizou autenticação
 
     # Autenticação via templates Django
     path("login/", auth_views.LoginView.as_view(template_name="core/login.html"), name="login"),
     path("logout/", auth_views.LogoutView.as_view(next_page="login"), name="logout"),
-
-    # API JWT
-    path("api/auth/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
-    path("api/auth/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
 
     # API custom (core/api_urls.py)
     path("api/", include("core.api_urls")),

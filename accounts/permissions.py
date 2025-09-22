@@ -26,7 +26,7 @@ class IsTeacherOrCoordinator(permissions.BasePermission):
         if request.user.role == "TEACHER":
             if hasattr(obj, "teacher"):  # para objetos do tipo ClassSession
                 return obj.teacher == request.user
-            if hasattr(obj, "classroom") and hasattr(obj.classroom, "teacher"):  # fallback
+            if hasattr(obj, "classroom") and hasattr(obj.classroom, "teacher"):
                 return obj.classroom.teacher == request.user
 
         return False

@@ -50,7 +50,8 @@ INSTALLED_APPS = [
     "crispy_bootstrap5",
     "drf_spectacular",
     "rest_framework",
-    "rest_framework_simplejwt"
+    "rest_framework_simplejwt",
+    "accounts"
 ]
 
 REST_FRAMEWORK = {
@@ -67,11 +68,12 @@ REST_FRAMEWORK = {
     ],
 }
 
+AUTH_USER_MODEL = "accounts.User"
+
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
-AUTH_USER_MODEL = 'core.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

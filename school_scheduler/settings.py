@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import timedelta
 from django.contrib.messages import constants as messages
 import os
 
@@ -18,6 +19,16 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=12),  
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),   
+    "ROTATE_REFRESH_TOKENS": False,                
+    "BLACKLIST_AFTER_ROTATION": True,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+}
+
+
 MESSAGE_TAGS = {
     messages.DEBUG: 'secondary',
     messages.INFO: 'info',
@@ -25,8 +36,6 @@ MESSAGE_TAGS = {
     messages.WARNING: 'warning',
     messages.ERROR: 'danger',
 }
-
-# Application definition
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -39,7 +48,25 @@ INSTALLED_APPS = [
     'crm',
     "crispy_forms",
     "crispy_bootstrap5",
+    "drf_spectacular",
+    "rest_framework",
+    "rest_framework_simplejwt"
 ]
+
+REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
+
+    "DEFAULT_FILTER_BACKENDS": [
+        "django_filters.rest_framework.DjangoFilterBackend",
+        "rest_framework.filters.SearchFilter",
+        "rest_framework.filters.OrderingFilter",
+    ],
+}
+
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"

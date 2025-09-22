@@ -94,7 +94,7 @@ class SessionAuditLog(models.Model):
 class TeacherUnavailability(models.Model):
     teacher = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'role': 'TEACHER'})
     start_date = models.DateField()
-    end_date = models.DateField()
+    end_date = models.DateField()   
     reason = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):

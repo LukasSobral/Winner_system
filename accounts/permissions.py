@@ -9,6 +9,21 @@ class IsCoordinator(permissions.BasePermission):
         return request.user.is_authenticated and request.user.role == "COORDINATOR"
 
 
+class IsCoordinatorOrReadOnly(permissions.BasePermission):
+    """
+    Coordenador pode tudo.
+    Outros papéis só podem leitura (GET, HEAD, OPTIONS).
+    """
+    def has_permission(self, request, view):
+        if not request.user.is_authenticated:
+            return False
+
+        if request.method in permissions.SAFE_METHODS:
+            return True
+
+        return request.user.role == "COORDINATOR"
+
+
 class IsTeacherOrCoordinator(permissions.BasePermission):
     """
     Coordenadores podem tudo.
@@ -18,13 +33,10 @@ class IsTeacherOrCoordinator(permissions.BasePermission):
         return request.user.is_authenticated and request.user.role in ["TEACHER", "COORDINATOR"]
 
     def has_object_permission(self, request, view, obj):
-        # Coordenador tem acesso total
         if request.user.role == "COORDINATOR":
             return True
-
-        # Professor pode mexer apenas nas sessões onde ele é o professor
         if request.user.role == "TEACHER":
-            if hasattr(obj, "teacher"):  # para objetos do tipo ClassSession
+            if hasattr(obj, "teacher"):
                 return obj.teacher == request.user
             if hasattr(obj, "classroom") and hasattr(obj.classroom, "teacher"):
                 return obj.classroom.teacher == request.user

@@ -6,6 +6,7 @@ urlpatterns = [
     ## DASHBOARD
     path('', views.dashboard, name='dashboard'),
 
+    
     # TURMAS
     path('manage/classrooms/', views.classrooms_manage, name='classrooms_manage'),
     path('manage/classrooms/create/', views.create_classroom, name='create_classroom'),

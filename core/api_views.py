@@ -5,14 +5,15 @@ from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework import viewsets, permissions,filters
-from core.api_serializers import UserSerializer, UserUpdateSerializer,TeacherSerializer, TeacherCreateSerializer, StudentSerializer,ClassroomSerializer, SessionSerializer,AttendanceSerializer,TeacherUnavailabilitySerializer
-from core.models import Student, ClassRoom,ClassSession,AttendanceRecord,TeacherUnavailability
+from core.api_serializers import UserSerializer, UserUpdateSerializer,TeacherSerializer, TeacherCreateSerializer, StudentSerializer,ClassroomSerializer, SessionSerializer,AttendanceSerializer,TeacherUnavailabilitySerializer,SessionAuditLogSerializer
+from core.models import Student, ClassRoom,ClassSession,AttendanceRecord,TeacherUnavailability,SessionAuditLog
 from accounts.models import User
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework import status as drf_status
 
-from accounts.permissions import IsCoordinator, IsTeacherOrCoordinator
+from accounts.permissions import IsCoordinator, IsTeacherOrCoordinator,IsStudentItself
+
 
 @api_view(["GET"])
 def ping(request):
@@ -248,3 +249,37 @@ class TeacherUnavailabilityViewSet(viewsets.ModelViewSet):
     search_fields = ["teacher__first_name", "teacher__last_name", "reason"]
     ordering_fields = ["start_date", "end_date"]
     ordering = ["-start_date"]
+
+
+#============ Teste de rotas protegidas ============
+@api_view(["GET"])
+@permission_classes([IsCoordinator])
+def test_coordinator(request):
+    return Response({"msg": f"✅ Olá {request.user.username}, você é Coordenador!"})
+
+
+@api_view(["GET"])
+@permission_classes([IsTeacherOrCoordinator])
+def test_teacher_or_coordinator(request):
+    return Response({"msg": f"✅ Olá {request.user.username}, você é Professor ou Coordenador!"})
+
+
+@api_view(["GET"])
+@permission_classes([IsStudentItself])
+def test_student(request):
+    return Response({"msg": f"✅ Olá {request.user.username}, você acessou como Estudante!"})
+
+
+class SessionAuditLogViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = SessionAuditLog.objects.all().select_related("session", "user")
+    serializer_class = SessionAuditLogSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        # Coordenador pode ver tudo
+        if self.request.user.role == "COORDINATOR":
+            return self.queryset
+        # Professor só vê logs das suas sessões
+        if self.request.user.role == "TEACHER":
+            return self.queryset.filter(session__teacher=self.request.user)
+        return SessionAuditLog.objects.none()

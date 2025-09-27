@@ -18,7 +18,7 @@ urlpatterns = [
     # Apps principais
     path("", include("core.urls")),
     path("crm/", include("crm.urls")),
-    path("api/accounts/", include("accounts.urls")),  # 🔥 centralizou autenticação
+    path("api/accounts/", include("accounts.urls")),
 
     # Autenticação via templates Django
     path("login/", auth_views.LoginView.as_view(template_name="core/login.html"), name="login"),

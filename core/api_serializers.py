@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from core.models import Student,AttendanceRecord,ClassSession,ClassRoom,TeacherUnavailability
+from core.models import Student,AttendanceRecord,ClassSession,ClassRoom,TeacherUnavailability, SessionAuditLog
 from accounts.models import User
 
 class UserSerializer(serializers.ModelSerializer):
@@ -48,12 +48,10 @@ class StudentSerializer(serializers.ModelSerializer):
         model = Student
         fields = ["id", "full_name", "classroom", "classroom_name", "active"]
 
-
 class ClassroomSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClassRoom
         fields = ["id", "name", "schedule", "book_level"]
-
 
 class SessionSerializer(serializers.ModelSerializer):
     classroom_name = serializers.CharField(source="classroom.name", read_only=True)
@@ -93,3 +91,11 @@ class TeacherUnavailabilitySerializer(serializers.ModelSerializer):
     class Meta:
         model = TeacherUnavailability
         fields = ["id", "teacher", "teacher_name", "start_date", "end_date", "reason"]
+
+class SessionAuditLogSerializer(serializers.ModelSerializer):
+    user_name = serializers.CharField(source="user.get_full_name", read_only=True)
+    session_name = serializers.CharField(source="session.__str__", read_only=True)
+
+    class Meta:
+        model = SessionAuditLog
+        fields = ["id", "session_name", "user_name", "action", "timestamp", "changes"]
